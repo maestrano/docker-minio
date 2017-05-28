@@ -1,0 +1,59 @@
+---
+sudo: required
+dist: trusty
+
+services:
+  - docker
+
+before_install:
+  - sudo apt-get install -y curl
+
+script:
+  # Install AWS CLI (ubuntu-provided one is generally old)
+  - curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
+  - python get-pip.py --user
+  - pip install awscli --user
+
+  # Build docker image
+  - cd 2.0/
+  - docker build -t maestrano/minio:travis . > /dev/null 2>&1
+
+  # Set access keys (region is only set to make the CLI happy)
+  - export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+  - export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+  - export AWS_DEFAULT_REGION=us-west-1
+
+  #=======================================
+  # Test with minimal parameters
+  #=======================================
+  # Run image
+  - docker run -p 9000:9000 -d --name travis-test -e "MINIO_ACCESS_KEY=$AWS_ACCESS_KEY_ID" -e "MINIO_SECRET_KEY=$AWS_SECRET_ACCESS_KEY" maestrano/minio:travis
+
+  # Get ip address
+  - "container_ip=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' travis-test`"
+
+  # Wait for container to be ready
+  - try_count=0;
+  - HEALTH_CHECK="starting"
+  - while [ "$HEALTH_CHECK" == "starting" ] || [ "$HEALTH_CHECK" == "unhealthy" ]; do let "try_count++"; [ $try_count -gt 100 ] && exit 20; sleep 5; HEALTH_CHECK=$(docker inspect --format='{{.State.Health.Status}}' travis-test 2>/dev/null); done
+
+  # Set storage endpoint
+  - export S3_ENDPOINT="http://${container_ip}:9000"
+
+  # Check that application is up
+  - "curl -f $S3_ENDPOINT/minio/login"
+
+  # Create bucket
+  - "aws --endpoint-url $S3_ENDPOINT s3 mb s3://mybucket"
+
+  # Add object to bucket
+  - touch myfile.txt
+  - "aws --endpoint-url $S3_ENDPOINT s3 cp myfile.txt s3://mybucket"
+
+  # Download file
+  - rm -f myfile.txt
+  - "aws --endpoint-url $S3_ENDPOINT s3 cp s3://mybucket/myfile.txt myfile.txt"
+  - '[ -f myfile.txt ]'
+
+  # Remove container
+  - docker rm -f travis-test
