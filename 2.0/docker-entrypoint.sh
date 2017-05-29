@@ -72,6 +72,11 @@ docker_secrets_env() {
     fi
 }
 
+## Create default bucket
+if [ -n "$MINIO_BUCKET" ]; then
+  mkdir -p /export/$MINIO_BUCKET
+fi
+
 ## Set access env from secrets if necessary.
 docker_secrets_env
 
