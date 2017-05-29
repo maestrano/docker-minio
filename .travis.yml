@@ -22,12 +22,13 @@ script:
   - export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
   - export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
   - export AWS_DEFAULT_REGION=us-west-1
+  - export DEFAULT_BUCKET=app-bucket
 
   #=======================================
   # Test with minimal parameters
   #=======================================
   # Run image
-  - docker run -p 9000:9000 -d --name travis-test -e "MINIO_ACCESS_KEY=$AWS_ACCESS_KEY_ID" -e "MINIO_SECRET_KEY=$AWS_SECRET_ACCESS_KEY" maestrano/minio:travis
+  - docker run -p 9000:9000 -d --name travis-test -e "MINIO_ACCESS_KEY=$AWS_ACCESS_KEY_ID" -e "MINIO_SECRET_KEY=$AWS_SECRET_ACCESS_KEY" -e "MINIO_BUCKET=$DEFAULT_BUCKET" maestrano/minio:travis
 
   # Get ip address
   - "container_ip=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' travis-test`"
@@ -49,10 +50,16 @@ script:
   # Add object to bucket
   - touch myfile.txt
   - "aws --endpoint-url $S3_ENDPOINT s3 cp myfile.txt s3://mybucket"
+  - "aws --endpoint-url $S3_ENDPOINT s3 cp myfile.txt s3://$DEFAULT_BUCKET"
 
-  # Download file
+  # Download file from created bucket
   - rm -f myfile.txt
   - "aws --endpoint-url $S3_ENDPOINT s3 cp s3://mybucket/myfile.txt myfile.txt"
+  - '[ -f myfile.txt ]'
+
+  # Download file from default bucket
+  - rm -f myfile.txt
+  - "aws --endpoint-url $S3_ENDPOINT s3 cp s3://$DEFAULT_BUCKET/myfile.txt myfile.txt"
   - '[ -f myfile.txt ]'
 
   # Remove container
