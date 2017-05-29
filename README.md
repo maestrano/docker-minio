@@ -8,8 +8,12 @@ Launch Minio with specific root credentials
 ```
 export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
 export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+export S3_ENDPOINT="http://localhost:9000"
 
-docker run -p 9000:9000 -d -e "MINIO_ACCESS_KEY=$AWS_ACCESS_KEY_ID" -e "MINIO_SECRET_KEY=$AWS_SECRET_ACCESS_KEY" maestrano/minio
+docker run -p 9000:9000 -d \
+  -e "MINIO_ACCESS_KEY=$AWS_ACCESS_KEY_ID" \
+  -e "MINIO_SECRET_KEY=$AWS_SECRET_ACCESS_KEY" \
+  maestrano/minio
 ```
 
 Create a bucket (assumes you've exported the AWS_ variables above)
