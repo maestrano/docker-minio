@@ -33,6 +33,20 @@ rm -f myfile.txt # delete previously created file
 aws --endpoint-url $S3_ENDPOINT s3 cp s3://mybucket/myfile.txt myfile.txt
 ```
 
+Add a public folder
+```
+# Add policy on mybucket to make the /public folder publicly readable
+aws --endpoint-url $S3_ENDPOINT s3api put-bucket-policy \
+  --bucket mybucket \
+  --policy '{"Version":"2012-10-17","Statement":[{"Effect": "Allow","Principal": "*","Action": "s3:GetObject","Resource": "arn:aws:s3:::mybucket/public/*"}]}'
+
+# Add file under public directory
+aws --endpoint-url $S3_ENDPOINT s3 cp myfile.txt s3://mybucket/public/
+
+# Below command should be successful
+curl $S3_ENDPOINT/mybucket/public/myfile.txt
+```
+
 Access the minio UI:
 1. Go to http://localhost:9000
 2. Enter the root credentials exported above to login
