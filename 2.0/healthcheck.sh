@@ -7,4 +7,4 @@
 [ "$NO_HEALTHCHECK" = "true" ] && exit 0
 
 # Monitor login page
-curl -f http://localhost:9000/minio/login || exit 1
+curl -f -H "User-Agent: Mozilla" http://localhost:9000/minio/login || exit 1
