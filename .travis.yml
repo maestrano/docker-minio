@@ -42,7 +42,7 @@ script:
   - export S3_ENDPOINT="http://${container_ip}:9000"
 
   # Check that application is up
-  - "curl -f $S3_ENDPOINT/minio/login"
+  - "curl -H 'User-Agent: Mozilla' -f $S3_ENDPOINT/minio/login"
 
   # Create bucket
   - "aws --endpoint-url $S3_ENDPOINT s3 mb s3://mybucket"
@@ -66,12 +66,12 @@ script:
   - for i in {30..0}; do docker exec -it travis-test /usr/local/bin/backup.sh; sleep 1; done
 
   # Check that only 20 backups are kept
-  - "bkup_count=$(docker exec -it m0 travis-test -l /snapshots | grep tar.gz | wc -l)"
+  - "bkup_count=$(docker exec -it travis-test ls -l /snapshots | grep tar.gz | wc -l)"
   - '[ "$bkup_count" == "20" ]'
 
   # Perform recovery
   - docker exec -it travis-test rm -rf /export/*
-  - docker exec -it m0 bash -c "tar -xvzf /snapshots/\$(ls -1r /snapshots/ | head -n 1) -C /"
+  - docker exec -it travis-test sh -c "tar -xvzf /snapshots/\$(ls -1r /snapshots/ | head -n 1) -C /"
 
   # Check integrity: download file from created bucket
   - rm -f myfile.txt

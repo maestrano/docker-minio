@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # This script creates a full backup of the mysql database
 # and rolls backup files over
@@ -13,9 +13,10 @@ BKUP_RETENTION=${BKUP_RETENTION:-20}
 mkdir -p $BKUP_DIR
 
 # Perform backup
+cd /tmp
 ts=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
 tar -zcf $ts.tar.gz /export/
-mv /tmp/$ts.sql.gz $BKUP_DIR/
+mv /tmp/$ts.tar.gz $BKUP_DIR/
 
 # Keep limited number of backups
-ls -1 $BKUP_DIR/*.tar.gz | head -n -${BKUP_RETENTION} | xargs -d '\n' rm -f --
+ls -1 $BKUP_DIR/*.tar.gz | head -n -${BKUP_RETENTION} | xargs rm -f --
