@@ -19,6 +19,9 @@ RUN  \
 
 EXPOSE 9000
 
+# Point-in-time backup script with backup rotation
+COPY backup.sh /usr/local/bin/
+
 # Entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
@@ -29,7 +32,7 @@ COPY healthcheck.sh /usr/local/bin/
 HEALTHCHECK --timeout=5s CMD sh /usr/local/bin/healthcheck.sh
 
 # Data (/export) and configuration (/root/.minio) volumes
-VOLUME ["/export","/root/.minio"]
+VOLUME ["/export", "/root/.minio", "/snapshots"]
 
 # Start in server mode by default
 CMD ["server","/export"]

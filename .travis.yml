@@ -62,5 +62,26 @@ script:
   - "aws --endpoint-url $S3_ENDPOINT s3 cp s3://$DEFAULT_BUCKET/myfile.txt myfile.txt"
   - '[ -f myfile.txt ]'
 
+  # Perform successive backups
+  - for i in {30..0}; do docker exec -it travis-test /usr/local/bin/backup.sh; sleep 1; done
+
+  # Check that only 20 backups are kept
+  - "bkup_count=$(docker exec -it m0 travis-test -l /snapshots | grep tar.gz | wc -l)"
+  - '[ "$bkup_count" == "20" ]'
+
+  # Perform recovery
+  - docker exec -it travis-test rm -rf /export/*
+  - docker exec -it m0 bash -c "tar -xvzf /snapshots/\$(ls -1r /snapshots/ | head -n 1) -C /"
+
+  # Check integrity: download file from created bucket
+  - rm -f myfile.txt
+  - "aws --endpoint-url $S3_ENDPOINT s3 cp s3://mybucket/myfile.txt myfile.txt"
+  - '[ -f myfile.txt ]'
+
+  # Check integrity: download file from default bucket
+  - rm -f myfile.txt
+  - "aws --endpoint-url $S3_ENDPOINT s3 cp s3://$DEFAULT_BUCKET/myfile.txt myfile.txt"
+  - '[ -f myfile.txt ]'
+
   # Remove container
   - docker rm -f travis-test
