@@ -24,7 +24,7 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 COPY healthcheck.sh /usr/local/bin/
 HEALTHCHECK --timeout=5s CMD sh /usr/local/bin/healthcheck.sh
 
-# Data (/export) and configuration (/root/.minio) volumes
+# Data (/export), configuration (/root/.minio) and backup (/snapshots) volumes
 VOLUME ["/export", "/root/.minio", "/snapshots"]
 
 # Start in server mode by default

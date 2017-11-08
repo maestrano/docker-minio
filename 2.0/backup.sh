@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# This script creates a full backup of the mysql database
-# and rolls backup files over
+# This script creates a full backup of the minio object store
+# and rollover the backup files 
 #
 set -e
 
